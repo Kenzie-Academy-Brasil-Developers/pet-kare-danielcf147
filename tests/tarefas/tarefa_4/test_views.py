@@ -198,6 +198,7 @@ class PetDetailViewsTest(APITestCase):
 
         trait_data_1 = {"name": "CLEVER"}
         trait_data_2 = {"trait_name": "friendly"}
+
         trait = Trait.objects.create(**trait_data_1)
         pet_1.traits.add(trait)
 

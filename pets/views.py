@@ -78,36 +78,11 @@ class PetDetailView(APIView):
 
         return Response(serializer.data)
 
-    # def patch(self, request: Request, pet_id: int) -> Response:
-    #     pet = get_object_or_404(Pet, pk=pet_id)
-
-    #     serializer = PetSerializer(data=request.data, partial=True)
-    #     serializer.is_valid(raise_exception=True)
-
-    #     traits_data: dict = serializer.validated_data.pop("traits", None)
-
-    #     if traits_data:
-    #         try:
-    #             trait = Trait.objects.get(pets=pet)
-    #             for key, value in traits_data.items():
-    #                 setattr(trait, key, value)
-    #             trait.save()
-    #         except Pet.traits.RelatedObjectDoesNotExist:
-    #             trait_obj = Trait.objects.create(**traits_data, pets=pet)
-
-    #     for key, value in serializer.validated_data.items():
-    #         setattr(pet, key, value)
-
-    #     pet.save()
-    #     serializer = PetSerializer(pet)
-
-    #     return Response(serializer.data)
-
     def patch(self, request: Request, pet_id: int) -> Response:
 
         pet = get_object_or_404(Pet, pk=pet_id)
 
-        serializer = PetSerializer(data=request.data, partial=True)
+        serializer = PetSerializer(pet, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         traits_data: list = serializer.validated_data.pop("traits", [])
@@ -115,11 +90,16 @@ class PetDetailView(APIView):
 
         pet.traits.clear()
         for trait_data in traits_data:
-            trait, _ = Trait.objects.get_or_create(name=trait_data["name"])
+            trait, _ = Trait.objects.update_or_create(
+                name__iexact=trait_data["name"], defaults=trait_data
+            )
             pet.traits.add(trait)
 
         if group_data:
-            group, _ = Group.objects.get_or_create(**group_data)
+            group, _ = Group.objects.update_or_create(
+                scientific_name__iexact=group_data["scientific_name"],
+                defaults=group_data,
+            )
             pet.group = group
             pet.save()
 
